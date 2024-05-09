@@ -12,23 +12,30 @@ function (_,a) { // t:#s.some.npc
     log = x => {
         out.push(`[\`2${(Date.now() - _START + "").padStart(4)}\`] ` + x)
         return out
-    }
+    },
+    f = (k, v) => log(`Solved \`N${k}\`: \`V${v}\``)
     log(`Cracking ${a.t.name}`)
     while (!/nection terminated.$/.exec(r)) {
         if (_END - Date.now() < 500)
             return {ok: !1, msg: [...log("`DHit timeout!`"), r, p]}
         if (!((l = /`N(.*)` (lock.|is missing.)$/.exec(r)) && (l = l[1])))
-            return {ok: !1, msg: [...out, r, p]}
+            return {ok: !1, msg: [...log("`DCouldn't find key`"), r, p]}
         log(`Found \`N${l}\``)
         switch (l) {
+        case "acct_nt":
+            p[l] = ""
+            return {ok: !1, msg: [...log("`DCan't solve acct_nt`"), #hs.accts.transactions({count: 15}), c(), p]}
+        case "CON_SPEC":
+            p[l] = ""
+            return {ok: !1, msg: [...log("`DCan't solve CON_SPEC`"), c(), p]}
         case "sn_w_glock":
             b = #ms.shia.labank({d:1})
             if (!b.ok)
-                return {ok: !1, msg: [...log('`DBanking error`'), b.msg, p]}
+                return {ok: !1, msg: [...log('`DBanking error`'), b.msg, r, p]}
             p[l] = ""
-            b = #ms.shia.labank({l: c()})
+            b = #ms.shia.labank({l: (r = c())})
             if (!b.ok)
-                return {ok: !1, msg: [...log('`DBanking error`'), b.msg, p]}
+                return {ok: !1, msg: [...log('`DBanking error`'), b.msg, r, p]}
             r = c()
             log(`Solved \`N${l}\` (hopefully, I'm not checking)`)
             break
@@ -38,7 +45,7 @@ function (_,a) { // t:#s.some.npc
                 p[l] = k
                 b = (r = c()).split` `
                 if (b[b.length - 3].split``.sort().join`` != "ilnoostu") {
-                    log(`Found \`N${l}\` solution: \`V${k}\``)
+                    f(l, k)
                     break
                 }
             }
@@ -47,7 +54,7 @@ function (_,a) { // t:#s.some.npc
             p[l] = ''
             p[l] = c().split`\n`.map(x => d[l][x]).join``
             r = c()
-            log(`Found \`N${l}\` solution: \`V${p[l]}\``)
+            f(l, p[l])
             break
         default:
             if (!(l in d))
@@ -55,7 +62,7 @@ function (_,a) { // t:#s.some.npc
             for (k of d[l]) {
                 p[l] = k
                 if (!/is not the cor/.exec(r = c())) {
-                    log(`Found \`N${l}\` solution: \`V${k}\``)
+                    f(l, k)
                     break
                 }
             }
