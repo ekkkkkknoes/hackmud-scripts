@@ -1,4 +1,4 @@
-function (_,a) { // t:#s.some.npc
+function (ctx,a) { // t:#s.some.npc
     if (!a || !a.t)
         return ":("
     let p = a.p ? a.p : {},
@@ -13,7 +13,8 @@ function (_,a) { // t:#s.some.npc
         out.push(`[\`2${(Date.now() - _START + "").padStart(4)}\`] ` + x)
         return out
     },
-    f = (k, v) => log(`Solved \`N${k}\`: \`V${v}\``)
+    f = (k, v) => log(`Solved \`N${k}\`: \`V${v}\``),
+    lib = #fs.scripts.lib()
     log(`Cracking ${a.t.name}`)
     while (!/nection terminated.$/.exec(r)) {
         if (_END - Date.now() < 500)
@@ -24,7 +25,7 @@ function (_,a) { // t:#s.some.npc
         switch (l) {
         case "acct_nt":
             p[l] = ""
-            return {ok: !1, msg: [...log("`DCan't solve acct_nt`"), #hs.accts.transactions({count: 15}), c(), p]}
+            return {ok: !1, msg: [...log("`DCan't solve acct_nt`"), #hs.accts.transactions({count: 25}).map(x=>lib.to_game_timestr(x.time) + `: \`${x.recipient == ctx.caller ? "L" : "D"}${x.amount}\` "${x.memo || ""}"`), c(), p]}
         case "CON_SPEC":
             p[l] = ""
             return {ok: !1, msg: [...log("`DCan't solve CON_SPEC`"), c(), p]}
