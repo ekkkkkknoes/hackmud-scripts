@@ -68,7 +68,7 @@ function (ctx,a) { // t:#s.some.npc
                     x.time <= b[4])
                 for (i = 0; i <= tx.filter(x => x.time == b[4]).length; i++)
                     for (j = 0; j <= tx.filter(x => x.time == b[3]).length; j++)
-                        s.push(tx.slice(i, tx.length - j).reduce((a, x) => a + x.amount * (x.sender == ctx.caller ? -1 : 1), 0))
+                        s.push(tx.slice(i, tx.length - j).reduce((a, x) => a + x.amount, 0))
                 s = s.filter((v, i, a) => a.indexOf(v) == i)
                 for (k of s) {
                     p[l] = k
