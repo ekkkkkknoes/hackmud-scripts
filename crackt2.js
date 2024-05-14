@@ -48,43 +48,35 @@ function (ctx,a) { // t:#s.some.npc
             p[l] = ""
             r = c()
             tx = #hs.accts.transactions({count: 35})
-            tx.forEach(x => x.time = lib.to_game_timestr(x.time))
-            s = []
-            if (b = /^What was the net GC between (.+) and (.+)$/.exec(r)){
-                tx = tx.filter(x => x.time >= b[1] && x.time <= b[2])
-                for (i = 0; i <= tx.filter(x => x.time == b[2]).length; i++)
-                    for (j = 0; j <= tx.filter(x => x.time == b[1]).length; j++)
-                        s.push(tx.slice(i, tx.length - j).reduce((a, x) => a + x.amount * (x.sender == ctx.caller ? -1 : 1), 0))
-                s = s.filter((v, i, a) => a.indexOf(v) == i)
-                for (k of s) {
-                    p[l] = k
-                    if ((r = c()) != b[0]) break
-                }
-            } else if (b = /^Need to know the total (earned|spent) on transactions (with|without) memos between (.+) and (.+)$/.exec(r)) {
-                tx = tx.filter(x =>
-                    b[1] == "spent" ? x.sender == ctx.caller : x.sender != ctx.caller &&
-                    b[2] == "with" ? "memo" in x : !("memo" in x) &&
-                    x.time >= b[3] &&
-                    x.time <= b[4])
-                for (i = 0; i <= tx.filter(x => x.time == b[4]).length; i++)
-                    for (j = 0; j <= tx.filter(x => x.time == b[3]).length; j++)
-                        s.push(tx.slice(i, tx.length - j).reduce((a, x) => a + x.amount, 0))
-                s = s.filter((v, i, a) => a.indexOf(v) == i)
-                for (k of s) {
-                    p[l] = k
-                    if ((r = c()) != b[0]) break
-                }
-            } else if (b = /^Get me the amount of a large (deposit|withdrawal) near (.+)$/.exec(r)) {
-                tx = tx.filter(x => b[1] == "deposit" ? x.sender != ctx.caller : x.sender == ctx.caller)
-                for (k of tx) {
+            if (b = /^Get me the amount of a large (deposit|withdrawal) near (.+)$/.exec(r)) {
+                for (k of tx.filter(x => b[1] == "deposit" ? x.sender != ctx.caller : x.sender == ctx.caller)) {
                     p[l] = k.amount
                     if ((r = c()) != b[0]) break
                 }
+            } else {
+                if (b = /^Need to know the total (earned|spent) on transactions (with|without) memos between (.+) and (.+)$/.exec(r))
+                    tx = tx.filter(x => b[2] == "with" ? "memo" in x : !("memo" in x))
+                else b = /^What was the (net) GC (between) (.+) and (.+)$/.exec(r) // the first two capture groups just exist so b[3] and b[4] are the timestamps in both cases
+                s = []
+                for (
+                    i  = tx.findIndex(x => b[3] >= lib.to_game_timestr(lib.add_time(x.time, -lib.one_day_ms)));
+                    i <= tx.findIndex(x => b[3] >  lib.to_game_timestr(lib.add_time(x.time,  lib.one_day_ms)));
+                    i++)
+                    for (
+                        j  = tx.findIndex(x => b[4] >= lib.to_game_timestr(lib.add_time(x.time, -lib.one_day_ms)));
+                        j <= tx.findIndex(x => b[4] >  lib.to_game_timestr(lib.add_time(x.time,  lib.one_day_ms)));
+                        j++)
+                        s.push(tx.slice(j, i).reduce((a, x) => x.amount * (x.sender == ctx.caller ? -1 : 1) + a, 0))
+                if (b[1] != "net") s = s.map(x => Math.abs(x)) // The earned/spent case doesn't want a signed value
+                s = s.filter((v, i, a) => a.indexOf(v) == i)
+                for (k of s) {
+                    p[l] = k
+                    if ((r = c()) != b[0]) break
+                }
             }
-            if (r != b[0])
-                f(l, p[l])
-            else
+            if (r == b[0])
                 return {ok: !1, msg: [...log("`DCan't solve acct_nt`"), #hs.accts.transactions({count: 35}).map(x=>lib.to_game_timestr(x.time) + `: \`${x.recipient == ctx.caller ? "L" : "D"}${x.amount}\` "${x.memo || ""}"`), r, p]}
+            f(l, p[l])
             break
         case "CON_SPEC":
             p[l] = ""
